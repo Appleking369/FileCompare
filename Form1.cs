@@ -56,5 +56,51 @@ namespace FileCompare
         {
 
         }
+
+        private void PopulateListView(ListView lv, string folderPath)
+        {
+            lv.BeginUpdate();
+            lv.Items.Clear();
+
+            try
+            {
+                // 폴더(디렉터리) 먼저 추가
+                var dirs = Directory.EnumerateDirectories(folderPath)
+                    .Select(p => new DirectoryInfo(p))
+                    .OrderBy(d => d.Name);
+
+                foreach (var d in dirs)
+                {
+                    var item = new ListViewItem(d.Name);
+                    item.SubItems.Add("<DIR>");
+                    item.SubItems.Add(d.LastWriteTime.ToString("g"));
+                    lv.Items.Add(item);
+
+                    // 파일 추가
+                    var files = Directory.EnumerateFiles(folderPath)
+                                         .Select(p => new FileInfo(p))
+                                         .OrderBy(f => f.Name);
+
+                    foreach (var f in files)
+                    {
+                        ListViewItem listViewItem = new(f.Name);
+                        listViewItem.SubItems.Add(f.Length.ToString("N0") + " 바이트");
+                        listViewItem.SubItems.Add(f.LastWriteTime.ToString("g"));
+                        lv.Items.Add(listViewItem);
+
+                        // 컬럼 너비 자동 조정(컨텐츠 기준)
+                        for (int i = 0; i < lv.Columns.Count; i++)
+                        {
+                            lv.AutoResizeColumn(i,
+                                ColumnHeaderAutoResizeStyle.ColumnContent);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                lv.EndUpdate();
+            }
+        }
     }
 }
